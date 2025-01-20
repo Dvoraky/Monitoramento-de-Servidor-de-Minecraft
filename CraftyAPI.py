@@ -7,6 +7,7 @@ from datetime import datetime
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 from dotenv import load_dotenv
+from threading import Thread
 
 load_dotenv()
 
@@ -138,6 +139,5 @@ ani = FuncAnimation(fig, atualizar_grafico, interval=2000)
 
 if __name__ == "__main__":
     print("Monitorando logs do servidor e exibindo gráfico...")
-    from threading import Thread
     Thread(target=monitor_server_logs, daemon=True).start()
     plt.show()
