@@ -13,7 +13,7 @@ import requests
 from quixstreams import Application
 import json
 
-matplotlib.use("TkAgg")  # Ou "Qt5Agg" dependendo do seu sistema
+matplotlib.use("TkAgg")
 
 app = Application(
     broker_address="localhost:9092", 
@@ -77,7 +77,7 @@ def monitor_server_logs():
                     print(log_decoded)
 
                     if "joined the game" in log_decoded.lower():
-                        jogador = extrair_jogador_entrada(log_decoded)
+                        jogador = extrair_jogador(log_decoded)
                         if jogador:
                             jogadores_online[jogador] = datetime.now()
                             if jogador not in tempo_total_jogadores:
@@ -85,7 +85,7 @@ def monitor_server_logs():
                                 conquistas[jogador] = 0
 
                     elif "left the game" in log_decoded.lower():
-                        jogador = extrair_jogador_saida(log_decoded)
+                        jogador = extrair_jogador(log_decoded)
                         if jogador and jogador in jogadores_online:
                             tempo_logado = (datetime.now() - jogadores_online.pop(jogador)).total_seconds()
                             tempo_total_jogadores[jogador] += tempo_logado
@@ -99,22 +99,20 @@ def monitor_server_logs():
                             for palavra in PROIBIDO:
                                 if palavra in mensagem.lower():
                                     print(f"Jogador {jogador} usou uma palavra proibida: {palavra}")
-                                    send_command_to_server(f"kick {jogador} Uso de linguagem/procedimento proibido")
+                                    send_command_to_server(f"kick {jogador} Uso de linguagem proibida")
 
                     elif "has made the advancement" in log_decoded.lower():
-                        jogador = extrair_jogador_chat(log_decoded)
+                        jogador = extrair_jogador(log_decoded)
 
                         if jogador:
                             conquistas[jogador] += 1
                             print(f"Jogador {jogador} fez uma conquista. Total: {conquistas[jogador]}")
 
-                            # Envia as conquistas para o Kafka
                             producer.produce(
                                 "conquista",
                                 json.dumps({"jogadores": list(conquistas.keys()), "conquistas": list(conquistas.values())}),
                                 key="Grafico de conquista"
                             )
-                            producer.flush()
 
             else:
                 print(f"Erro ao obter logs: {response.status_code} - {response.text}")
@@ -125,18 +123,10 @@ def monitor_server_logs():
         
         time.sleep(2)
 
-def extrair_jogador_entrada(log):
-    if "joined the game" in log.lower():
-        partes = log.split()
-        if len(partes) > 2:
-            return partes[2]
-    return None
-
-def extrair_jogador_saida(log):
-    if "left the game" in log.lower():
-        partes = log.split()
-        if len(partes) > 2:
-            return partes[2]
+def extrair_jogador(log):
+    partes = log.split()
+    if len(partes) > 2:
+        return partes[2]
     return None
 
 def extrair_jogador_chat(log):
@@ -154,7 +144,7 @@ def extrair_mensagem_chat(log):
             return partes[1].strip()
     return None
 
-
+# Não remover essa função, nem comentar, sem ela o código para de funcionar e nós não sabemos o porquê
 def atualizar_grafico(frame):
     jogadores = list(tempo_total_jogadores.keys())
     tempos = [
@@ -171,34 +161,10 @@ def atualizar_grafico(frame):
     ax.set_title("Tempo logado dos jogadores")
     ax.set_xlim(0, max(tempos) + 10 if tempos else 10)
 
-"""
-def get_servers():
-    url = f"{BASE_URL}/servers"
-    headers = {
-        "Authorization": f"Bearer {TOKEN}",
-        "Content-Type": "application/json",
-    }
-    try:
-        response = requests.get(url, headers=headers, verify=False)
-        if response.status_code == 200:
-            servers = response.json().get("data", [])
-            if servers:
-                for server in servers:
-                    print(f"ID: {server['server_id']}, Nome: {server['server_name']}")
-            else:
-                print("Nenhum servidor encontrado.")
-        else:
-            print(f"Erro ao obter servidores: {response.status_code} - {response.text}")
-    except requests.exceptions.RequestException as e:
-        print(f"Erro na requisição: {e}")
-"""
-
 fig, ax = plt.subplots()
 ani = FuncAnimation(fig, atualizar_grafico, interval=2000, cache_frame_data=False)
-
 
 if __name__ == "__main__":
     print("Monitorando logs do servidor e exibindo gráfico...")
     Thread(target=monitor_server_logs, daemon=True).start()
-    plt.show()
-    #monitor_server_logs()
+    plt.show() # Nem comentar essa
