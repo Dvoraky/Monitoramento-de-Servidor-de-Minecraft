@@ -1,7 +1,19 @@
 # Monitoramento-de-Servidor-de-Minecraft
-Monitoramento de um servidor de Minecraft utilizando do Crafty, Kafka e Spark.
+Monitoramento de um servidor de Minecraft utilizando do Crafty e Kafka.
 
-## Rodando o Servidor Kafka
+## Funcionalidades
+
+- Aplicação Produtora monitora o chat do servidor por palavras na lista de proibidas, expulsando os jogadores que as digitarem.
+
+- Aplicação Consumidora gera dois gráficos em tempo real:
+    - Tempo permanecido por jogadores no servidor;
+    - Número de conquistas alcançadas.
+
+<img alt="captura de tela com gráficos e jogo rodando simultaneamente. No fundo, o console da aplicação consumidora" src="Img/captura_de_tela.png" width="700">
+
+## Rodando as Aplicações
+
+### Rodando o Servidor Kafka
 
 Use:
 
@@ -9,7 +21,7 @@ Use:
 docker compose up
 ```
 
-## Rodando as Aplicações Python
+### Rodando as Aplicações Python
 
 Crie o ambiente virtual na pasta App:
 
